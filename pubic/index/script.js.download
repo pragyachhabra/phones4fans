@@ -1,0 +1,643 @@
+var easyChat = function(mode) {
+    this.mode = mode;
+};
+easyChat.prototype = {
+    mode: 'visitor',
+    guid: null,
+    socket: null,
+    nickname: null,
+    signedIn: false,
+    cInner: null,
+    cStart: null,
+	cOffline: null,
+    cHeader: null,
+    isSomeoneTyping: false,
+	isIdle: false,
+	bdy: null,
+    boot: function(mode) {
+        this.cWrapper = $('#easyChat');
+        this.cInner = this.cWrapper.find('#easyChatInner');
+        this.cStart = this.cInner.find('#ecStartBody');
+        this.cOffline = this.cInner.find('#ecChatOffline');
+        this.cHeader = this.cInner.find('#ecMainHeader .txt');
+        if (mode)
+            this.mode = mode;
+        if (typeof io === "undefined") {
+            this.cOffline.show();
+            this.cWrapper.addClass('offline');
+            return;
+        }
+        this.socket = io.connect('http://192.165.224.18:80');
+        this.setUser();
+        this.signInCheck();
+        this.events();
+
+        if (this.getCookie('ecOpen') == 'yes') {
+            $('#ecMainHeader').click();
+        }
+		this.bdy = $('body');
+		var t = this;
+		if (t.mode != 'admin') {
+			this.socket.emit('chat status', function(status) {
+				if (!status) {
+                    t.cWrapper.addClass('offline');
+					t.cOffline.show();
+				}
+			});
+			console.log('chat status');
+		}
+		this.browser();
+		
+    },
+	browser: function() {
+		var is_chrome = navigator.userAgent.indexOf('Chrome') > -1;
+		var is_explorer = navigator.userAgent.indexOf('MSIE') > -1;
+		var is_firefox = navigator.userAgent.indexOf('Firefox') > -1;
+		var is_safari = navigator.userAgent.indexOf("Safari") > -1;
+		var is_opera = navigator.userAgent.toLowerCase().indexOf("op") > -1;
+		if ((is_chrome)&&(is_safari)) {is_safari=false;}
+		if ((is_chrome)&&(is_opera)) {is_chrome=false;}
+		
+		if (is_safari) this.bdy.addClass('safari');
+	},
+    title: function(title) {
+        this.cHeader.html(title);
+    },
+    setUser: function() {
+        this.guid = this.getCookie(this.mode+'-guid');
+        if (!this.guid) {
+            this.guid = this.getGuid();
+            this.setCookie(this.mode+'-guid', this.guid);
+        }
+    },
+    setCookie: function(cname, cvalue, exdays) {
+        var d = new Date();
+        d.setTime(d.getTime() + (exdays*24*60*60*1000));
+        var expires = "expires="+d.toUTCString();
+        document.cookie = cname + "=" + cvalue + "; " + expires;
+    },
+    getCookie: function(cname) {
+        var name = cname + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0; i<ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0)==' ') c = c.substring(1);
+            if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
+        }
+        return "";
+    },
+    getGuid: function() {
+        function s4() {
+            return Math.floor((1 + Math.random()) * 0x10000)
+                .toString(16)
+                .substring(1);
+        }
+        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+            s4() + '-' + s4() + s4() + s4();
+    },
+    onbeforeunload: function() {
+        this.socket.emit('user leave');
+    },
+    onSignedIn: function() {
+        var t = this;
+        this.signedIn = true;
+        this.cInner.addClass('signedIn');
+        if (!this.cInner.find('#ecOperators').length)
+            this.cInner.prepend('<div id="ecOperators"><div class="ecHeader">Operatörer</div><ul></ul></div>');
+        if (!this.cInner.find('#ecVisitors').length)
+            this.cInner.prepend('<div id="ecVisitors"><ul></ul></div>');
+        this.cStart.hide();
+        this.title('Inloggad');
+    },
+    addPreMsgs: function(guid, msgs, room, user) {
+        var t = this,
+            wrp = $('.ecChatWrap[data-guid="'+guid+'"] .ecChatMsgs .ecChatMsgsInner');
+        for (var i in msgs) {
+            msgs[i].classes = [];
+            msgs[i].msg = msgs[i].str;
+            if (t.guid == msgs[i].guid) {
+                msgs[i].classes.push('me');
+            }
+            wrp.append(msgs[i].user_id == 0 ? ('<span class="ecSystemChatMsg"><i>' + msgs[i].msg + "</i></span><br/>") : t.msgWrp(msgs[i]));
+        }
+        t.scrollBottom(guid);
+    },
+    signInCheck: function() {
+        // login check
+        var t = this;
+        if (t.mode == 'admin') {
+            var username = t.getCookie('username');
+            var password = t.getCookie('password');
+            if (!username.length || !password.length)
+                return;
+            t.login(username, password);
+            /*
+            t.socket.emit('login check', {guid: t.guid}, function(status) {
+                if (status)
+                    t.onSignedIn();
+            })
+            */
+        }
+        else {
+            t.socket.emit('check user', {guid: t.guid, reconnect: true}, function(msgs, room, user) {
+                t.cStart.hide();
+                t.title(t.hasHelp() ? 'Chat ansluten' : '<i class="ec-icon-schedule"></i> Väntar på operator...');
+                t.cStart.after($('#ecChatTemplate').html().replace('!guid', t.guid));
+                t.addPreMsgs(t.guid, msgs, room, user);
+                t.scrollBottom(t.guid);
+            });
+        }
+    },
+    hasHelp: function(val) {
+        var t = this;
+        if (val != undefined)
+            return t.setCookie('hasHelp', val);
+        var c = t.getCookie('hasHelp');
+        return c == '1';
+    },
+    login: function(username, password) {
+        var t = this;
+        if (!username.length || !password.length) {
+            return alert('Användarnamn eller lösenord saknas!');
+        }
+        t.socket.emit('login', {guid: t.guid, username: username, password: password}, function(status) {
+            if (!status) {
+                return alert('Inloggning misslyckades!');
+            }
+            t.onSignedIn();
+            t.setCookie('username', username);
+            t.setCookie('password', password);
+        })
+    },
+    gooOn: function(){
+        this.setFilter('url(#goo)');
+    },
+    gooOff: function(){
+        this.setFilter('none');
+    },
+    setFilter: function(value){
+        $(".chat-effect-container").css({
+            '-webkit-filter': value,
+            //'-moz-filter': value,
+            //'filter':value,
+        });
+    },
+    msgWrp: function(data) {
+        var cHtml = $('#ecChatMsgTemplate').html()
+                .replace('!classes', typeof data.classes === 'object' ? data.classes.join(' ') : '')
+                .replace('!initials', data.initials)
+                .replace('!nickname', data.nickname)
+                .replace('!msg', data.msg)
+            ;
+        return cHtml;
+    },
+    scrollBottom: function(guid) {
+        var wrp = $('.ecChatWrap[data-guid="'+guid+'"] .ecChatMsgs');
+        if (!wrp.length)
+            return;
+        wrp.scrollTop(wrp[0].scrollHeight + 1000);
+    },
+    events: function() {
+
+        var t = this;
+        /*
+        var $nickForm = $('#setNick');
+        var $nickError = $('#nickError');
+        var $nickBox = $('#nickname');
+        var $users = $('#users');
+        var $messageForm = $('#send-message');
+        var $messageBox = $('#message');
+        var $chat = $('#chat');
+        */
+        $('body').on('click', '#easyChat #ecMainHeader', function() {
+            var inner = $(this).parents('#easyChatInner');
+            inner
+                .find('#ecMainHeader .txt').html(t.mode == 'admin' ? 'Logga in' : '<i class="ec-icon-chat2"></i> Chatta med oss')
+                .end()
+                .find('#ecStartBody').html(
+                    t.signedIn ? 'is signed in' : ($(t.mode == 'admin' ? '#ecStartBodyAdminTemplate' : '#ecStartBodyVisitorTemplate').html())
+                )
+            ;
+            setTimeout(function() {
+                if (inner.hasClass('open')) {
+                    inner.removeClass('open');
+                    inner.css({overflow: 'hidden'});
+                    t.setCookie('ecOpen', 'no');
+                }
+                else {
+                    inner.addClass('open');
+                    setTimeout(function() {
+                        inner.css({overflow: 'visible'});
+                    },500);
+                    t.setCookie('ecOpen', 'yes');
+                }
+            },50);
+
+        });
+		$('body').on('click', '#ecOperators li .ec-icon-close', function() {
+			t.socket.emit('signout', {guid: t.guid}, function(data) {
+				t.setCookie('username','',-1);
+				t.setCookie('password','',-1);
+                location.reload();
+            });
+		});
+        $('body').on('click', '#ecVisitors li', function() {
+            var that = $(this),
+                guid = that.attr('data-guid');
+            $('.ecChatWrap').hide();
+            $('.ecChatWrap[data-guid="'+guid+'"]').show();
+            if ($('.ecChatWrap[data-guid="'+guid+'"]').length) {
+                return;
+            }
+            t.cStart.after($('#ecAdminChatTemplate').html().replace('!guid', guid));
+            t.socket.emit('check user', {guid: guid, reconnect: false}, function(msgs, room, user) {
+                console.log('check this user', msgs, room);
+                t.addPreMsgs(guid, msgs, room, user);
+                t.title(
+                    user.nickname
+                    +(!that.hasClass('helped') ? '<i class="ec-icon-chat ecChatJoin" data-guid="'+guid+'" title="Join"></i>' : '')
+                    +'<i class="ec-icon-close ecChatClose" data-guid="'+guid+'" title="Avsluta chat"></i>'
+                );
+            });
+        });
+        $('body').on('click', '#easyChat #ecStartJoin', function() {
+            if (t.mode == "visitor") {
+                var ecChat = $(this).parents('#easyChat'),
+                    nickname = ecChat.find('#ecUserNickname').val(),
+                    type = ecChat.find('#ecUserType').val(),
+                    email = ecChat.find('#ecUserEmail').val(),
+                    phone = ecChat.find('#ecUserPhone').val(),
+                    question = ecChat.find('#ecStartQuestion').val();
+                if (nickname.length < 3) {
+                    return alert('Namn måste anges och ska vara minst 3 bokstäver');
+                }
+                /*
+                 else if (!type.length) {
+                 return alert('Typ måste väljas');
+                 }
+                 */
+                else if (question.length < 3) {
+                    return alert('Fråga måste anges och ska vara minst 10 bokstäver lång');
+                }
+                t.nickname = nickname;
+                // start chat here
+                t.socket.emit('new user', {nickname: t.nickname, email: email, phone: phone, question: question, type: type, guid: t.guid}, function(data){
+                    if (!data.activeChat) {
+                        t.cStart.hide();
+                        t.title('<i class="ec-icon-schedule"></i> Väntar på operator...');
+                        t.cStart.after($('#ecChatTemplate').html().replace('!guid', t.guid));
+                    }
+                    return console.log('new userrr', data);
+                    if(unique){
+                        if (!operator) {
+                            $('#contentWrap').prepend('<div id="chatWrap" data-guid="'+t.guid+'"><div id="chat"></div><form id="send-message"><input size="35" id="message"><input type="submit"></form></div>');
+                        }
+                        $('#nickWrap').hide();
+                        $('#contentWrap').show();
+                    } else{
+                        $nickError.html('That username is already taken!  Try again.');
+                    }
+                });
+                //$nickBox.val('');
+            }
+            else if (t.mode == "admin") {
+                var ecChat = $(this).parents('#easyChat'),
+                    username = ecChat.find('#ecUsername').val(),
+                    password = ecChat.find('#ecPassword').val();
+                // login here
+                t.login(username, password);
+            }
+        });
+
+        $('body').on('click', '.ec-icon-chat[data-guid]', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            var chatWrp = $('.ecChatWrap[data-guid="'+$(this).attr('data-guid')+'"]');
+            t.socket.emit('op_join', {guid: chatWrp.attr('data-guid')}, function(data){
+                chatWrp.find('.ecChatMsgs .ecChatMsgsInner').append('<span class="ecSystemChatMsg">'+(data ? 'Du har anslutit till chatten' : 'Det gick inte att ansluta till chatten!')+'</span>');
+                t.title(data.nickname);
+            });
+            $(this).remove();
+        });
+
+        $('body').on('click', '.ecChatClose[data-guid]', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            var guid = $(this).attr('data-guid');
+            var chatWrp = $('.ecChatWrap[data-guid="'+guid+'"]');
+            t.socket.emit('close chat', {guid: guid});
+			chatWrp.remove();
+			$('#ecVisitors').find('li[data-guid="'+guid+'"]').remove();
+        });
+
+        t.socket.on('chat closed', function(data){
+            t.title('Chatt avslutad!');
+            var chatWrp = $('.ecChatWrap[data-guid="'+data.guid+'"]');
+            chatWrp.find('.chat-input-wrapper').remove();
+            chatWrp.find('.ecChatMsgs .ecChatMsgsInner').append('<span class="ecSystemChatMsg"><i>' + data.msg + "</i></span>");
+            if (data.guid == t.guid) {
+                t.hasHelp('0');
+                //chatWrp.find('.ecChatMsgs .ecChatMsgsInner').append('<span class="ecSystemChatMsg ecChatBtnEmail"><button>Maila mig chat konversationen</button></span>');
+                chatWrp.find('.ecChatMsgs .ecChatMsgsInner').append('<span class="ecSystemChatMsg ecChatBtnNew"><button>Starta ny chat</button></span>');
+            }
+            else if (t.mode == 'admin') {
+                chatWrp.remove();
+            }
+        });
+
+        $('body').on('click', '.ecChatBtnNew', function(e) {
+            $('.ecChatWrap').hide();
+            t.cStart.show();
+        });
+
+        $('body').on('click', '.ecChatBtnEmail', function(e) {
+            var that = $(this),
+                guid = that.parents('.ecChatWrap').attr('data-guid'),
+                chatWrp = $('.ecChatWrap[data-guid="'+guid+'"]');
+            t.socket.emit('email chat', {guid: guid}, function(data) {
+                that.remove();
+                chatWrp.find('.ecChatMsgs .ecChatMsgsInner').after('<span class="ecSystemChatMsg ecChatBtnEmail"><button>'+data.msg+'</button></span>');
+            });
+        });
+
+        $('body').on('click', '.ecChatMsgSend', function(e) {
+            var chatWrp = $(this).parents('.ecChatWrap'),
+				guid = chatWrp.attr('data-guid');
+            if (!chatWrp.find('.ecChatMsg').text().length)
+                return;
+			var joinBtn = $('.ecChatJoin[data-guid="'+guid+'"]');
+			if (joinBtn.length)
+				joinBtn.click();
+            t.socket.emit('send message', {sender: t.guid, guid: guid, msg: chatWrp.find('.ecChatMsg').text()}, function(data){
+                chatWrp.find('.ecChatMsgs .ecChatMsgsInner').append('<span class="error">' + data.msg + "</span>");
+            });
+            chatWrp.find('.chat-effect-container').append('<div class="ecChatMsgWrp me fakeMsg"><div class="ecMsgTxt">'+chatWrp.find('.ecChatMsg').text()+'</div></div>');
+            chatWrp.find('.ecChatMsg').text('');
+            t.socket.emit('stop typing', {guid: chatWrp.attr('data-guid')});
+
+            $input = $('.ecChatMsg');
+
+            t.gooOn();
+
+            setTimeout(function() {
+                $target = $('.ecChatMsgWrp.hidden');
+                $(".ecChatMsgWrp.fakeMsg")
+                    .css({
+                        left:$target.position().left,
+                        top:$target.position().top - 192
+                    })
+                ;
+            },20);
+            setTimeout(function() {
+                t.gooOff();
+                $('.ecChatMsgWrp.hidden').removeClass('hidden');
+                $('.ecChatMsgWrp.fakeMsg').remove();
+            },1100);
+
+        });
+
+        t.socket.on('new message', function(data){
+            console.log('new message', data);
+            data.classes = [];
+            if (t.guid == data.sender) {
+                data.classes.push('me');
+                data.classes.push('hidden');
+            }
+            $('.ecChatWrap[data-guid="'+data.guid+'"] .ecChatMsgs .ecChatMsgsInner').append(t.msgWrp(data));
+            t.scrollBottom(data.guid);
+			
+			if (t.mode == 'admin' && document.visibilityState == "hidden"/* && t.isIdle*/) {
+				alert('New message');
+				console.log('alert ', t.isIdle);
+			}
+
+            if (t.mode == 'admin' && !$('#ecMainHeader .ec-icon-chat[data-guid='+data.guid+']').length && $('.ecChatWrap[data-guid="'+data.guid+'"]').is(':visible')) {
+                t.socket.emit('message read', data.guid);
+                console.log('is visible');
+            }
+        });
+
+        t.socket.on('operators list', function(data){
+            console.log('operators list', data);
+            var opWrp = t.cInner.find('#ecOperators ul');
+            opWrp.html('');
+            for (var i in data) {
+                opWrp.append('<li data-guid="'+data[i].guid+'">'+(data[i].guid == t.guid ? '<i class="ec-icon-close" title="logga ut"></i>' : '')+''+data[i].nickname+'</li>');
+             }
+            if (!Object.keys(data).length) {
+                opWrp.append('<li class="none">No operators available</li>');
+            }
+            t.cInner.find('#ecOperators .ecHeader').html('<i class="ec-icon-person"></i> Operatörer ('+Object.keys(data).length+')');
+        });
+
+        t.socket.on('visitors list', function(data){
+            console.log('visitors list', data);
+            var _vhtml = '';
+            var vsWrp = t.cInner.find('#ecVisitors ul');
+            vsWrp.html('');
+            for (var i in data) {
+                vsWrp.append('<li data-guid="'+data[i].guid+'" class="'+(data[i].helped===true?'helped'+(data[i].helped_by.indexOf(t.guid)> -1?' by_me':''):'')+'"><span class="nickname">'+data[i].nickname+'</span><span class="unread'+(data[i].unread ? '' : ' hide')+'">'+data[i].unread+'</span><span class="typing"><span></span><span></span><span></span></span> </span> </li>');
+            }
+            if (!Object.keys(data).length) {
+                vsWrp.append('<li class="none">No visitors</li>');
+            }
+            t.cInner.find('#ecVisitors .ecHeader').html('<i class="ec-icon-person"></i> Besökare ('+Object.keys(data).length+')');
+        });
+
+        $('body').on('keyup', '.ecChatMsg', function(e) {
+			var key = e.keyCode || e.which,
+			chatWrp = $(this).parents('.ecChatWrap');
+
+			if (key === 13) {
+				return chatWrp.find('.ecChatMsgSend').click();
+			}
+            var guid = chatWrp.attr('data-guid');
+            if ($(this).text().length) {
+                t.socket.emit('typing', {guid: guid});
+            }
+            else {
+                t.socket.emit('stop typing', {guid: guid});
+            }
+        });
+
+        t.socket.on('is_typing', function(data){
+            $('#ecVisitors li[data-guid="'+data.guid+'"]').addClass('is_typing');
+            if(t.isSomeoneTyping) return;
+
+            t.isSomeoneTyping=true;
+
+            var $dots=$("<div/>")
+                    .addClass('chat-effect-dots')
+                    .css({
+                        top:78,
+                        left:10
+                    })
+                    .appendTo($(".chat-effect-container"))
+                ;
+            for (var i = 0; i < 3; i++) {
+                var $dot=$("<div/>")
+                        .addClass("chat-effect-dot")
+                        .css({
+                            left:i*14
+                        })
+                        .appendTo($dots)
+                    ;
+            };
+
+            var $info=$("<div/>")
+                .addClass("chat-info-typing")
+                .text(data.msg)
+                .appendTo($(".chat-info-container"));
+
+            $('#ecVisitors li[data-guid="'+data.guid+'"]').addClass('is_typing');
+
+            t.gooOn();
+
+            console.log('is_typing', data);
+        });
+
+        t.socket.on('stopped_typing', function(data){
+            $('#ecVisitors li[data-guid="'+data.guid+'"]').removeClass('is_typing');
+            if(!t.isSomeoneTyping) return;
+            setTimeout(function() {
+                t.gooOff();
+            },350);
+            setTimeout(function() {
+                $('.chat-effect-dots').remove();
+                $('.chat-info-typing').text('').removeClass('chat-info-typing');
+            },500);
+
+            t.isSomeoneTyping=false;
+            console.log('stopped_typing', data);
+        });
+
+        $('body').on('click', '.ec-icon-join', function(e) {
+            e.preventDefault();
+            var chatWrp = $(this).parents('.ecChatWrap');
+            t.socket.emit('op_join', {guid: chatWrp.attr('data-guid')}, function(data){
+                chatWrp.find('#chat').append('<span class="msg"><i>'+(data ? 'Du har anslutit till chatten' : 'Det gick inte att ansluta till chatten!')+'</i></span><br/>');
+            });
+            $(this).remove();
+        });
+
+        t.socket.on('op_joined', function(data){
+            console.log('op_joined', data);
+            if (t.mode == 'admin') {
+                //$('#ecVisitors li[data-guid="'+data.user_guid+'"]').addClass('helped');
+                return;
+            }
+            $('.ecChatWrap[data-guid="'+t.guid+'"] .ecChatMsgs .ecChatMsgsInner').append('<span class="ecSystemChatMsg"><i>' + data.msg + "</i></span><br/>");
+            t.title('Chat ansluten');
+            t.hasHelp('1');
+            t.scrollBottom(t.guid);
+        });
+
+        t.socket.on('disconnected', function(data){
+            console.log('disconnected', data);
+            $('.ecChatWrap[data-guid="'+data.guid+'"] .ecChatMsgs .ecChatMsgsInner').append('<span class="ecSystemChatMsg"><i>' + data.msg + "</i></span><br/>");
+            t.scrollBottom(t.guid);
+        });
+        t.socket.on('user left', function(data){
+            console.log('user left', data);
+            $('.ecChatWrap[data-guid="'+data.guid+'"] .ecChatMsgs .ecChatMsgsInner').append('<span class="ecSystemChatMsg"><i>' + data.msg + "</i></span><br/>");
+            t.scrollBottom(t.guid);
+        });
+
+        t.socket.on('rejoin', function(data){
+            console.log('rejoin', data);
+            $('.ecChatWrap[data-guid="'+data.guid+'"] .ecChatMsgs .ecChatMsgsInner').append('<span class="ecSystemChatMsg"><i>' + data.msg + "</i></span><br/>");
+            t.scrollBottom(t.guid);
+        });
+		
+		t.socket.on('chat offline', function() {
+			if (t.mode == 'admin')
+				return;
+			console.log('chat offline');
+			t.cOffline.show();
+            t.cWrapper.addClass('offline');
+		});
+		
+		t.socket.on('chat online', function() {
+			if (t.mode == 'admin')
+				return;
+			console.log('chat online');
+			t.cOffline.hide();
+            t.cWrapper.removeClass('offline');
+		});
+		
+		$(window).focus(function() {
+			t.isIdle = false; 
+			console.log('not idle', t.isIdle);
+		});
+
+        $(window).blur(function() {
+            t.isIdle = true;
+            console.log('idle', t.isIdle);
+        });
+
+        /*
+        $nickForm.submit(function(e){
+            e.preventDefault();
+            t.nickname = $nickBox.val();
+            t.socket.emit('new user', {nickname: t.nickname, guid: t.guid}, function(unique, operator, nickname){
+                if(unique){
+                    if (!operator) {
+                        $('#contentWrap').prepend('<div id="chatWrap" data-guid="'+t.guid+'"><div id="chat"></div><form id="send-message"><input size="35" id="message"><input type="submit"></form></div>');
+                    }
+                    $('#nickWrap').hide();
+                    $('#contentWrap').show();
+                } else{
+                    $nickError.html('That username is already taken!  Try again.');
+                }
+            });
+            $nickBox.val('');
+        });
+
+        this.socket.on('usernames', function(users){
+            Object.keys(users).forEach(function(u) {
+                if (!users[u].isOperator && !$('#chatWrap[data-guid="'+u+'"]').length)
+                    $('#contentWrap').prepend('<div id="chatWrap" data-guid="'+u+'">'+u+'<br>'+users[u].nickname+'<div id="chat"></div><form id="send-message"><input size="35" id="message"><input type="button" value="Join" id="chatJoin"><input type="button" value="Hälsa" id="startFrase"> <input type="submit"></form></div>');
+            });
+        });
+
+        $('body').on('submit', '#send-message', function(e) {
+            e.preventDefault();
+            socket.emit('send message', {sender: t.guid, guid: $(this).parents('#chatWrap').attr('data-guid'), msg: $(this).find('#message').val()}, function(data){
+                $chat.append('<span class="error">' + data + "</span><br/>");
+            });
+            $(this).find('#message').val('');
+        });
+
+
+
+        $('body').on('click', '#startFrase', function(e) {
+            e.preventDefault();
+            var chatWrp = $(this).parents('#chatWrap');
+            socket.emit('frase', {key: 'start', guid: chatWrp.attr('data-guid')});
+            //$(this).remove();
+        });
+
+        this.socket.on('new message', function(data){
+            console.log('new message', data);
+            $('#chatWrap[data-guid="'+data.guid+'"] #chat').append('<span class="msg"><b>' + data.nickname + ': </b>' + data.msg + "</span><br/>");
+        });
+
+
+
+
+
+
+        */
+
+
+
+        /*
+         window.onbeforeunload = function(){
+         t.onbeforeunload();
+         }
+         */
+        window.addEventListener("beforeunload", function(e){
+            t.onbeforeunload();
+        }, false);
+    }
+};

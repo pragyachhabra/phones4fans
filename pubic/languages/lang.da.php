@@ -1,0 +1,130 @@
+<?php
+/* 
+------------------
+Language: Daniesh
+------------------
+*/
+header('Content-Type: text/html; charset=ISO-8859-1');
+$lang = array();
+
+$lang['PAGE_TITLE'] = 'My website page title';
+$lang['HEADER_TITLE'] = 'My website header title';
+$lang['SITE_NAME'] = 'My Website';
+$lang['SLOGAN'] = 'My slogan here';
+$lang['HEADING'] = 'Heading';
+
+// Menu
+
+$lang['MENU_HOME'] = 'fagfolk';
+$lang['MENU_mobile subscriptions'] = 'Mobilabonnementer';
+$lang['MENU_Mobile Broadband'] = 'Mobilt bredbånd';
+$lang['MENU_Landline'] = 'fastnet';
+$lang['MENU_Cloud-based gear'] = 'Cloud-baseret gear';
+$lang['MENU_mobile Client'] = 'Mobil klient';
+$lang['MENU_Reseller'] = 'forhandler';
+$lang['MENU_Create your own subscription'] = 'Opret dit eget abonnement';
+$lang['MENU_Customer Interface'] = 'Kundeinterface';
+$lang['MENU_ledger'] = 'hovedbog';
+$lang['MENU_Operator'] = 'Operatør';
+$lang['MENU_Customer Interfacee'] = 'Kundeinterface';
+$lang['MENU_ledgerr'] = 'hovedbog';
+$lang['MENU_cloud Servicess'] = 'Sky tjenester';
+$lang['MENU_If Easy Telecom'] = 'Hvis Easy Telecom';
+$lang['MENU_Technique'] = 'Teknik';
+$lang['MENU_Contact Us'] = 'Kontakt os';
+$lang['MENU_operating Status'] = 'Driftsstatus';
+$lang['MENU_address'] = 'Besøg og postadresser';
+$lang['MENU_check'] = 'Planlagt netværksvedligeholdelse 2017-02-19 - ingen forventet nedetid';
+$lang['MENU_checkb'] = 'Opdateret 2017-02-08';
+$lang['MENU_promo-text'] = 'Ikke ligesom andre telefonoperatører.';
+$lang['MENU_sub-text'] = 'Easy Telecom udvikler innovative tjenester i spidsen for teknologi ..';
+$lang['MENU_mobile subscriptions'] = 'Mobilabonnementer';
+$lang['MENU_Mobile Broadband'] = 'Mobilt bredbånd';
+$lang['MENU_Fixed network Phones'] = 'Faste netværkstelefoner';
+$lang['MENU_Cloud-based gear'] = 'Cloud-baseret gear';
+$lang['MENU_mobile Client'] = 'Mobil klient';
+$lang['MENU_secone'] = 'EKSEMPLER AF MOBIL TILMELDING';
+$lang['MENU_subone'] = 'EasyFlex';
+$lang['MENU_subtwo'] = 'Let stor';
+$lang['MENU_subthree'] = 'Nem Combo';
+$lang['MENU_DESCRIPTION'] = 'BESKRIVELSE';
+$lang['MENU_SETTING TIME'] = 'INDSTILLINGSTID';
+$lang['MENU_NOTICE PERIOD'] = 'MEDDELINGSPERIODE';
+$lang['MENU_SETTING TIME'] = 'INDSTILLINGSTID';
+$lang['MENU_BENEFITS'] = 'FORDELE';
+$lang['MENU_Flexible'] = 'Fleksibel og tilgængelig, du betaler kun for de perioder, du ringer til.';
+$lang['MENU_up to36'] = 'Op til 36 måneder';
+$lang['MENU_up to3'] = 'Op til 3 måneder';
+$lang['MENU_Pay'] = 'Let stor';
+$lang['MENU_Tak'] = 'Takprisabonnemang - en kombination af Easy Flex Easy Large og hvor du beder om en fleksibel model op til et bestemt beløb, som abonnementet går ind i en fast pris.';
+$lang['MENU_flat'] = 'Flat rate abonnementer hvor du ved hvad det vil koste, måned for måned. Abonnementet fås i forskellige størrelser og former.';
+
+$lang['MENU_BENEFITS_O'] = 'Betal kun for det, du ringer til. Nogle måneder kan du ikke bruge mobiltelefonen så ofte, men vil have, at andre altid kan nå dig. Lidt smartere simpelthen!';
+$lang['MENU_BENEFITS_T'] = 'Betal et fladt månedligt gebyr hver måned. Ingen overraskelser eller dyre telefonregninger i en populær løsning.';
+$lang['MENU_BENEFITS_TH'] = 'Ring til dig lidt, du betaler lidt og ringer til dig mere vil koste mere end loftprisen. ';
+$lang['MENU_secth'] = 'Eksempler på mobil bredbånd';
+$lang['MENU_subone_one'] = 'Mobilt bredbånd 1';
+$lang['MENU_subtwo_two'] = 'Mobilt bredbånd 2';
+$lang['MENU_subthree_three'] = 'Mobilt bredbånd 3';
+$lang['MENU_row_one'] = '10 GB data pr. Måned';
+$lang['MENU_row_two'] = '20 GB data pr. Måned';
+$lang['MENU_row_three'] = '40 GB pr. Måned';
+$lang['MENU_row_bottom1'] = '10 GB data til normal surf, egnet til læsning af mail, mindre omfattende kontorarbejde.';
+$lang['MENU_row_bottom2'] = 'Kontorarbejde og mere krævende brug.';
+$lang['MENU_row_bottom3'] = 'Til mere krævende Browsing, Netflix, YouTube og andre.';
+$lang['MENU_secforth'] = 'EKSEMPLER AF FÆLLET LINE TELEFONI';
+$lang['MENU_mobile_one'] = 'Reception';
+$lang['MENU_mobile_two'] = 'Kontor';
+$lang['MENU_mobile_three'] = 'Opkaldscenter';
+$lang['MENU_mobile_forth'] = 'telemarketing';
+$lang['MENU_mobile_des_one'] = 'Cloud-baserede tjenester - EasyQueue til håndtering af store mængder af indgående opkald på forskellige niveauer. Receptionist, der forbinder opkald direkte i webbrugeren, kan vælge at forlade køen, der skal kaldes.';
+$lang['MENU_mobile_des_two'] = 'De faste netabonnementer, der er tilsluttet via full-MEX, med mobilabonnementer i den skybaserede switching, er altid tilgængelige 24/7 365 dage om året.';
+$lang['MENU_mobile_des_three'] = 'Cloud-baseret koblingssystem med fuld redundans og høj ydeevne. Services Easy Queue til håndtering af store mængder af indgående opkald.';
+$lang['MENU_mobile_des_forth'] = 'Cloud-baseret switching system med fuld redundans med meget høj ydeevne. Services EasyQueue, til håndtering af store mængder af indgående opkald.';
+$lang['MENU_mobile_bottom_one'] = 'Ingen installation af dig, alle operationer er i skyen.';
+$lang['MENU_mobile_bottom_two'] = 'Fastnettelefoni, mobiltelefoni og selskabet skifter fra en operatør på en faktura med simpel prisfastsættelse.';
+$lang['MENU_mobile_bottom_three'] = 'Ret pris, høj stemmekvalitet, pålidelig serviceudbyder med høj teknisk ekspertise.';
+$lang['MENU_mobile_bottom_forth'] = 'Ret pris, høj stemmekvalitet, pålidelig serviceudbyder med høj teknisk ekspertise.';
+$lang['MENU_secfifth'] = 'CLOUD-BASED GEAR';
+$lang['MENU_para_one'] = 'EasyTelecoms telefon er placeret hos os. Du og du behøver ikke bekymre dig om at have kyndige personale i omstillingsbordet eller besværlig support eller leasing. Vi tager hånd om dit gear døgnet rundt, sikkert. Faktisk fungerer alle EasyTelecoms Services. Vi ved, at vi er de bedste af teknologien omkring telefoni. Lad os passe på din stemme for et mere problemløst liv.';
+$lang['MENU_para_two'] = 'Easy Telecom håndterer millioner af opkald minutter fra faste og mobiltelefoner i tusindvis af virksomheder. All trafik passerer gennem en af vores telefonfaciliteter placeret på strategiske steder i Sverige. Fordi vi selv har udviklet tjenester og har 100% kontrol på alle områder, har vi næsten ubegrænsede muligheder for at udvikle, producere og realisere fremtidens tjenester i dag.';
+$lang['MENU_secfive'] = 'MOBILKUNDE';
+$lang['MENU_client_one'] = 'Vores mobile klient, vi har navngivet EasyApp. Kernen i vores mobile forretningstjenester, og selvfølgelig kan den være parret med hele vores mobil. MEX service leveres med loginoplysninger til EasyApp for din virksomhed. Gennem mobilapplikationen kan du se, hvornår dine kolleger er optaget på telefonen eller er gået til dagen, er på ferie eller på møder - i din telefon, men du skal ringe til dem! Du kan nemt selv indtaste, hvis du er til frokost, aftaler, sygdom, rejser eller nogen af de ti mest almindelige referencer. Vi har også en unik funktion, som vi har kaldt Call dagbog. Opkaldskalenderen registrerer alle opkald, indgående og udgående, og gemmer dem centralt og sikkert gemt i Easy Telecom. Du kan altid se alle dine optagne opkald direkte fra EasyApp, via kalenderen eller datoen, og vælg et af opkaldene. Gennem en sikkerhedsprocedure spiller vi, når hele samtalen på din mobiltelefon. Du kan spole tilbage, pause og vælge om du vil gemme langsigtet opkald.';
+$lang['MENU_client_twoo'] = 'Alt firmaet er køer er nemme at nå geom EasyApp. Der kan du også se, hvor mange mennesker der er logget på hver kø og logger ind eller ud på enhver kø. Vælg hurtigt, hvis du vil have dit mobilnummer synligt udadtil, når du ringer eller måske snarere kontorets tavle?';
+$lang['MENU_client_three'] = 'Forindstillingene er nemme at vælge, hvor en opkalder kommer, hvis du ikke svarer eller er optaget. Hvis du vil have opkald til nogen af din økonomi eller support, gøres dette blot ved et klik på EasyApp under et opkald.';
+$lang['MENU_sign'] = 'Download EasyApp';
+$lang['MENU_login'] = 'Login';
+$lang['MENU_mobile group'] = 'Mobilgrupper';
+$lang['MENU_reference'] = 'Referencer';
+$lang['MENU_myinfo'] = 'Min info';
+$lang['MENU_Call diary'] = 'Ring dagbog';
+$lang['MENU_Queues'] = 'Køer';
+$lang['voice mailboxes'] = 'Telefonsvarer';
+$lang['call Recordings'] = 'Ring optagelser';
+$lang['Service classes'] = 'Service klasser';
+$lang['EasyQueue'] = 'Nem kø';
+$lang['documents Hotels'] = 'Dokumenter hoteller';
+$lang['Report'] = 'Rapport';
+$lang['function codes'] = 'Funktionskoder';
+$lang['Interkomgrupper'] = 'Interkomgrupper';
+$lang['remote Access'] = 'fjernadgang';
+$lang['EasyCRM'] = 'EasyCRM';
+$lang['digital signatures'] = 'Digitale signaturer';
+$lang['call Specifications'] = 'Ring Specifikationer';
+$lang['Queue function'] = 'Køfunktion';
+$lang['Hunting Groups'] = 'Jagtgrupper';
+$lang['IVR menus'] = 'IVR menuer';
+$lang['call Recording'] = 'Ring optagelse';
+$lang['multiple safety systems'] = 'Flere sikkerhedssystemer';
+$lang['full MEX'] = 'Fuld MEX';
+$lang['pattern Menus'] = 'Mønster menuer';
+$lang['Telepo integration'] = 'Telepo integration';
+$lang['Alarm'] = 'Alarm';
+$lang['System Integration'] = 'Systemintegration';
+$lang['call diary'] = 'Ring dagbog';
+$lang['Fixed and mobile telephony'] = 'Fast og mobil telefoni';
+$lang['MENU_Cloud-based services'] = 'Cloud-baserede tjenester';
+$lang['downloadone'] = 'Download appen ved at scanne QR-koden!';
+$lang['Org. nr'] = 'Org. nummer';
+$lang['VAT-nr'] = 'Moms nummer';
+?>
